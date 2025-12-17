@@ -1,0 +1,22 @@
+# Security (Ignored Keys)
+.env
+*.env
+
+# Python (Heavy folders & Cache)
+venv/
+__pycache__/
+*.pyc
+
+# Node.js (Heavy folders)
+node_modules/
+.next/
+dist/
+out/
+
+# Database (Local data)
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
