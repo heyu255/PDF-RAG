@@ -12,9 +12,20 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [resetting, setResetting] = useState(false);
 
+
+
+
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    // 1. Fetch history from backend
+    fetch("http://127.0.0.1:8000/history")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Loaded history:", data);
+        // 2. Update the UI with the old messages
+        setMessages(data); 
+      })
+      .catch((err) => console.error("Failed to load history:", err));
+  }, []); // 👈 The empty [] means "run only once on startup"
 
   const fetchDocuments = async () => {
     try {
