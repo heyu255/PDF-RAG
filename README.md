@@ -58,7 +58,7 @@ The backend is designed to be lightweight and "stateless." Files are processed i
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/your-username/pdf-rag-ai.git
+[git clone https://github.com/your-username/pdf-rag-ai.git](https://github.com/heyu255/PDF-RAG.git)
 
 ```
 
@@ -99,3 +99,4 @@ Configure `.env` files in both directories with your `OPENAI_API_KEY` and `PINEC
 This project is open-source under the MIT License.
 
 ---
+
