@@ -1,9 +1,9 @@
 import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_pinecone import PineconeVectorStore
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,14 +29,21 @@ Context: {context}
 Question: {input}"""
     )
     
-    # 4. Create the document chain
-    document_chain = create_stuff_documents_chain(llm, prompt)
-    
-    # 5. Create the retrieval chain
+    # 4. Create the retriever
     retriever = vector_store.as_retriever()
-    qa_chain = create_retrieval_chain(retriever, document_chain)
+    
+    # 5. Create the RAG chain using the new LCEL (LangChain Expression Language) pattern
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    rag_chain = (
+        {"context": retriever | format_docs, "input": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
     
     # 6. Ask the question
-    response = qa_chain.invoke({"input": question})
+    response = rag_chain.invoke(question)
     
-    return response["answer"]
+    return response
