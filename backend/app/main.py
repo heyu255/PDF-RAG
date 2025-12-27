@@ -119,15 +119,59 @@ async def chat_endpoint(request: ChatRequest):
 def reset_knowledge_base():
     try:
         # 1. Clear Supabase (File List + History)
-        clear_all()
+        if supabase:
+            clear_all()
+        else:
+            print("⚠️ Supabase not initialized, skipping database clear")
 
         # 2. Clear Pinecone (Vector Memory)
-        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-        index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
-        index.delete(delete_all=True)
+        try:
+            pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+            index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+            
+            # Get current stats to see what we're deleting
+            stats_before = index.describe_index_stats()
+            print(f"📊 Pinecone stats before delete: {stats_before}")
+            
+            # Delete all vectors - try both methods to be safe
+            # Method 1: delete_all (works for most cases)
+            try:
+                delete_response = index.delete(delete_all=True)
+                print(f"✅ Pinecone delete_all response: {delete_response}")
+            except Exception as e1:
+                print(f"⚠️ delete_all failed, trying namespace delete: {e1}")
+                # Method 2: Delete by namespace (if using namespaces)
+                # LangChain PineconeVectorStore uses empty string "" as default namespace
+                try:
+                    index.delete(delete_all=True, namespace="")
+                    print(f"✅ Pinecone namespace delete successful")
+                except Exception as e2:
+                    print(f"⚠️ Namespace delete also failed: {e2}")
+                    # Method 3: Delete all namespaces
+                    if hasattr(stats_before, 'namespaces'):
+                        for ns in stats_before.namespaces.keys():
+                            index.delete(delete_all=True, namespace=ns)
+                            print(f"✅ Deleted namespace: {ns}")
+            
+            # Wait a moment for deletion to propagate
+            import time
+            time.sleep(1)
+            
+            # Verify deletion by checking stats
+            stats_after = index.describe_index_stats()
+            print(f"📊 Pinecone stats after delete: {stats_after}")
+            
+        except Exception as pinecone_error:
+            print(f"❌ Pinecone delete error: {pinecone_error}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Failed to clear Pinecone: {str(pinecone_error)}")
 
         return {"message": "Knowledge base cleared successfully"}
     except Exception as e:
+        print(f"❌ Reset error: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
         
 @app.get("/history")
