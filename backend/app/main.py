@@ -23,12 +23,12 @@ def save_message(role: str, content: str):
 
 def get_all_messages():
 
-    response =supabase.table("messages").select("*").order("timestamp", desc=False).execute()
+    response =supabase.table("messages").select("*").order("created_at", desc=False).execute()
     return response.data
 def clear_messages():
     supabase.table("messages").delete().neq("id", -1).execute()
 def clear_documents():
-    supabase.table("documents").delete().neq("id", -1).execute()
+    supabase.table("document").delete().neq("id", -1).execute()
 def clear_all():
     clear_messages()
     clear_documents()
@@ -67,14 +67,13 @@ async def upload_pdf(file: UploadFile = File(...)):
         
         result = process_pdf(temp_path)
         
-        try:
-            supabase.table("documents").insert({
-                "filename": file.filename,
-                "timestamp": datetime.now().isoformat(),
-            }).execute()
- 
-        except Exception as db_e:
-            print(f"Database error: {db_e}")
+        if supabase:
+            try:
+                supabase.table("document").insert({
+                    "filename": file.filename,
+                }).execute()
+            except Exception as db_e:
+                print(f"Supabase error (upload_pdf): {db_e}")
 
         return result
         
@@ -87,8 +86,13 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.get("/documents")
 def get_documents():
-    response = supabase.table("documents").select("*").order("timestamp", desc=False).execute()
-    return response.data
+    if not supabase: return {"documents": []}
+    try:
+        response = supabase.table("document").select("filename").order("timestamp", desc=True).execute()
+        return {"documents": [row["filename"] for row in response.data]}
+    except Exception as e:
+        print(f"Supabase error (get_documents): {e}")
+        return {"documents": []}
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
