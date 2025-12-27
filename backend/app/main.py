@@ -1,6 +1,6 @@
 import os
 import shutil
-import sqlite3
+from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -8,61 +8,34 @@ from pydantic import BaseModel
 from app.services.pdf_service import process_pdf
 from app.services.chat_service import get_answer
 from pinecone import Pinecone
+from dotenv import load_dotenv
+from supabase import create_client, Client
+load_dotenv()
 
 # --- Database Setup ---
-DB_NAME = "rag_app.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    # 1. Documents Table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename TEXT NOT NULL,
-        upload_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    
-    # 2. Messages Table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        role TEXT NOT NULL,
-        content TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    print("✅ Database initialized (Documents + Messages).")
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: Initialize the database
-    init_db()
-    yield
-    # Shutdown: (Cleanup if needed)
-
-app = FastAPI(lifespan=lifespan)
-
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
 def save_message(role: str, content: str):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO messages (role, content) VALUES (?, ?)", (role, content))
-    conn.commit()
-    conn.close()
+    data = {
+        "role": role,
+        "content": content,
+    }
+    supabase.table("messages").insert(data).execute()
 
 def get_all_messages():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row  # This allows accessing columns by name
-    cursor = conn.cursor()
-    cursor.execute("SELECT role, content FROM messages ORDER BY timestamp ASC")
-    rows = cursor.fetchall()
-    conn.close()
-    return [{"role": row["role"], "content": row["content"]} for row in rows]
+
+    response =supabase.table("messages").select("*").order("timestamp", desc=False).execute()
+    return response.data
+def clear_messages():
+    supabase.table("messages").delete().neq("id", -1).execute()
+def clear_documents():
+    supabase.table("documents").delete().neq("id", -1).execute()
+def clear_all():
+    clear_messages()
+    clear_documents()
+    return {"message": "All data cleared successfully"}
+
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -95,11 +68,11 @@ async def upload_pdf(file: UploadFile = File(...)):
         result = process_pdf(temp_path)
         
         try:
-            conn = sqlite3.connect(DB_NAME)
-            c = conn.cursor()
-            c.execute("INSERT OR IGNORE INTO documents (filename) VALUES (?)", (file.filename,))
-            conn.commit()
-            conn.close()
+            supabase.table("documents").insert({
+                "filename": file.filename,
+                "timestamp": datetime.now().isoformat(),
+            }).execute()
+ 
         except Exception as db_e:
             print(f"Database error: {db_e}")
 
@@ -114,13 +87,8 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.get("/documents")
 def get_documents():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT filename FROM documents ORDER BY id DESC")
-    rows = c.fetchall()
-    conn.close()
-    return {"documents": [row["filename"] for row in rows]}
+    response = supabase.table("documents").select("*").order("timestamp", desc=False).execute()
+    return response.data
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
@@ -145,13 +113,8 @@ async def chat_endpoint(request: ChatRequest):
 @app.delete("/reset")
 def reset_knowledge_base():
     try:
-        # 1. Clear SQLite (File List + History)
-        conn = sqlite3.connect(DB_NAME)
-        c = conn.cursor()
-        c.execute("DELETE FROM documents")
-        c.execute("DELETE FROM messages")
-        conn.commit()
-        conn.close()
+        # 1. Clear Supabase (File List + History)
+        clear_all()
 
         # 2. Clear Pinecone (Vector Memory)
         pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Send, Upload, Loader2, FileText, Database, Trash2 } from "lucide-react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
 export default function Home() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState("");
@@ -17,7 +19,7 @@ export default function Home() {
 
   useEffect(() => {
     // 1. Fetch history from backend
-    fetch("http://127.0.0.1:8000/history")
+    fetch(API_BASE_URL + "/history")
       .then((res) => res.json())
       .then((data) => {
         console.log("Loaded history:", data);
@@ -29,7 +31,7 @@ export default function Home() {
 
   const fetchDocuments = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/documents");
+      const res = await axios.get(API_BASE_URL + "/documents");
       setDocuments(res.data.documents);
     } catch (error) {
       console.error("Failed to fetch docs", error);
@@ -44,7 +46,7 @@ export default function Home() {
     formData.append("file", e.target.files[0]);
 
     try {
-      await axios.post("http://127.0.0.1:8000/upload", formData);
+      await axios.post(API_BASE_URL + "/upload", formData);
       alert("PDF Uploaded Successfully!");
       fetchDocuments();
     } catch (error) {
@@ -60,7 +62,7 @@ export default function Home() {
     
     setResetting(true);
     try {
-      await axios.delete("http://127.0.0.1:8000/reset");
+      await axios.delete(API_BASE_URL + "/reset");
       setDocuments([]);
       setMessages([]);
       alert("Knowledge base cleared!");
@@ -81,7 +83,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/chat", {
+      const res = await axios.post(API_BASE_URL + "/chat", {
         question: input,
       });
       const aiMessage = { role: "ai", content: res.data.answer };
