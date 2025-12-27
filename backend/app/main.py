@@ -74,6 +74,7 @@ async def upload_pdf(file: UploadFile = File(...)):
                 }).execute()
             except Exception as db_e:
                 print(f"Supabase error (upload_pdf): {db_e}")
+                # Don't fail the upload if Supabase fails, just log it
 
         return result
         
