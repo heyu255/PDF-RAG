@@ -1,22 +1,37 @@
-# Security (Ignored Keys)
-.env
-*.env
-
-# Python (Heavy folders & Cache)
-venv/
+# Python
 __pycache__/
-*.pyc
-
-# Node.js (Heavy folders)
-node_modules/
-.next/
-dist/
-out/
-
-# Database (Local data)
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
 *.db
 *.sqlite3
 
-# OS files
+# Node
+node_modules/
+.next/
+out/
+dist/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+temp_uploads/*
+!temp_uploads/.gitkeep
