@@ -1,0 +1,96 @@
+{
+  "summary": {
+    "total_questions": 5,
+    "rag_grounded_percent": 100.0,
+    "non_rag_hallucination_percent": 0.0,
+    "avg_grounding_score": 93.0,
+    "estimated_hallucination_reduction": 0
+  },
+  "results": [
+    {
+      "question": "What is the main topic discussed in the documents?",
+      "rag_answer": "The main topic discussed in the documents is the user guide for the Hasselblad X1D II 50C camera, specifically focusing on the general settings menu and various features related to camera settings, fi...",
+      "non_rag_answer": "I'm sorry, but I don't have access to specific documents or their content. If you can provide more context or details about the documents, I may be able to help you identify the main topic.",
+      "evaluation": {
+        "rag_grounded": true,
+        "non_rag_has_hallucinations": false,
+        "more_likely_hallucinating": "Neither",
+        "rag_grounding_score": 90,
+        "reasoning": "The RAG response is based on specific document content, accurately summarizing the main topic discussed. The non-RAG response does not provide any specific information about the documents and instead asks for more context, which is appropriate given its lack of access to the documents."
+      },
+      "context_check": {
+        "has_substantial_content": true,
+        "mentions_cannot_answer": false,
+        "likely_grounded": true
+      }
+    },
+    {
+      "question": "Summarize the key points from the uploaded documents.",
+      "rag_answer": "The X1D II 50C camera can capture images in Hasselblad RAW format or simultaneously in Hasselblad RAW + JPEG formats. The RAW files are initially stored in a proprietary 3FR format, which contains the...",
+      "non_rag_answer": "I'm sorry, but I cannot access or view uploaded documents. However, if you provide me with text or key excerpts from the documents, I can help summarize or analyze that information.",
+      "evaluation": {
+        "rag_grounded": true,
+        "non_rag_has_hallucinations": false,
+        "more_likely_hallucinating": "Neither",
+        "rag_grounding_score": 95,
+        "reasoning": "The RAG response is well-grounded in the provided document context, summarizing specific details about the X1D II 50C camera and its file formats. The non-RAG response does not contain any hallucinations but lacks context and specific information from the documents."
+      },
+      "context_check": {
+        "has_substantial_content": true,
+        "mentions_cannot_answer": false,
+        "likely_grounded": true
+      }
+    },
+    {
+      "question": "What are the most important details mentioned?",
+      "rag_answer": "The most important details mentioned in the context include:\n\n1. **Settings and Features**: Various settings related to date & time, power, spirit level, GPS, language & unit, service, firmware update...",
+      "non_rag_answer": "Could you please provide more context or specify the topic or text you are referring to? This will help me identify the most important details.",
+      "evaluation": {
+        "rag_grounded": true,
+        "non_rag_has_hallucinations": false,
+        "more_likely_hallucinating": "Neither",
+        "rag_grounding_score": 90,
+        "reasoning": "The RAG response is well-grounded in specific document content, providing detailed information about the camera's functionalities and accessories. The non-RAG response does not contain hallucinations but lacks context and specific information, making it less useful."
+      },
+      "context_check": {
+        "has_substantial_content": true,
+        "mentions_cannot_answer": false,
+        "likely_grounded": true
+      }
+    },
+    {
+      "question": "Can you explain the concepts covered in the documents?",
+      "rag_answer": "The documents cover various concepts related to the X1D II 50C camera and its functionalities. Key topics include:\n\n1. **Camera Features and Specifications**: An overview of the camera's features, inc...",
+      "non_rag_answer": "I would need more specific information about the documents you're referring to in order to explain the concepts covered in them. Please provide details or key topics from the documents, and I'll do my...",
+      "evaluation": {
+        "rag_grounded": true,
+        "non_rag_has_hallucinations": false,
+        "more_likely_hallucinating": "Neither",
+        "rag_grounding_score": 95,
+        "reasoning": "The RAG response is well-grounded in the context of the documents, providing specific details about the camera and its functionalities. The non-RAG response does not contain hallucinations but lacks specific information, making it less informative."
+      },
+      "context_check": {
+        "has_substantial_content": true,
+        "mentions_cannot_answer": false,
+        "likely_grounded": true
+      }
+    },
+    {
+      "question": "What information is available about the subject matter?",
+      "rag_answer": "The information available about the subject matter includes details from the Hasselblad X1D II 50C User Guide, which is intended for informational use only. It mentions that the information and 3D pro...",
+      "non_rag_answer": "Could you please specify the subject matter you are referring to? This will help me provide you with the most relevant information.",
+      "evaluation": {
+        "rag_grounded": true,
+        "non_rag_has_hallucinations": false,
+        "more_likely_hallucinating": "Non-RAG",
+        "rag_grounding_score": 95,
+        "reasoning": "The RAG response is well-grounded in the provided document context, detailing specific information from the Hasselblad X1D II 50C User Guide. The non-RAG response does not provide any relevant information and instead asks for clarification, which indicates a lack of grounding in the subject matter."
+      },
+      "context_check": {
+        "has_substantial_content": true,
+        "mentions_cannot_answer": false,
+        "likely_grounded": true
+      }
+    }
+  ]
+}

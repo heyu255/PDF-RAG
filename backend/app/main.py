@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,7 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from app.services.pdf_service import process_pdf
 from app.services.chat_service import get_answer
+from app.services.metrics import metrics_collector
 from pinecone import Pinecone
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -100,16 +102,41 @@ async def chat_endpoint(request: ChatRequest):
     question = request.question
     
     # 1. Save USER message immediately
+    metadata_start = time.time()
     save_message("user", question)
+    metadata_time = time.time() - metadata_start
 
     try:
-        # 2. Get answer from chat service
-        answer = get_answer(question)
+        # 2. Get answer from chat service with metrics
+        result = get_answer(question, track_metrics=True)
+        
+        if isinstance(result, tuple):
+            answer, metrics = result
+            # Add metadata time to metrics
+            metrics["metadata_time_seconds"] = metadata_time
+            
+            # Record metrics for aggregation
+            metrics_collector.record_query(
+                question=question,
+                tokens_input=metrics["tokens_input"],
+                tokens_output=metrics["tokens_output"],
+                retrieval_time=metrics["retrieval_time_seconds"],
+                llm_time=metrics["llm_time_seconds"],
+                metadata_time=metadata_time,
+                chunks_retrieved=metrics.get("chunks_retrieved", 0)
+            )
+        else:
+            answer = result
+            metrics = None
         
         # 3. Save ASSISTANT message before returning
         save_message("assistant", answer)
 
-        return {"answer": answer}
+        response = {"answer": answer}
+        if metrics:
+            response["metrics"] = metrics
+        
+        return response
     except Exception as e:
         print(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -177,3 +204,14 @@ def reset_knowledge_base():
 @app.get("/history")
 async def get_history():
     return get_all_messages()
+
+@app.get("/metrics")
+async def get_metrics():
+    """Get performance metrics summary"""
+    return metrics_collector.get_summary()
+
+@app.get("/metrics/export")
+async def export_metrics():
+    """Export detailed metrics to JSON file"""
+    filepath = metrics_collector.export_metrics()
+    return {"message": f"Metrics exported to {filepath}", "filepath": filepath}
