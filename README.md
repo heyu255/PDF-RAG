@@ -1,5 +1,6 @@
 
 # PDF-RAG AI: Enterprise Knowledge Retrieval System
+https://pdf-rag-ruddy.vercel.app/
 
 A full-stack **Retrieval-Augmented Generation (RAG)** application that transforms static PDF documents into a searchable, interactive knowledge base. Unlike standard LLM uploads, this system utilizes a vector database to handle unlimited document scale with enterprise-grade privacy.
 
@@ -99,4 +100,5 @@ Configure `.env` files in both directories with your `OPENAI_API_KEY` and `PINEC
 This project is open-source under the MIT License.
 
 ---
+
 
